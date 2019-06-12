@@ -3,7 +3,7 @@ Contributors: quriobot
 Tags: quriobot,chatbots,surveys,support
 Requires at least: 4.6
 Tested up to: 5.0.3
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
@@ -66,11 +66,10 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 == Screenshots ==
 
 1. The settings interface. Add your unique Quriobot Path to the empty field, and Save Changes to install the Quriobot script for that site.
-2. After saving you will see this success message. Click the link to verify your installation was successful.
-3. Success! If you see this message Quriobot is installed on your site. Visit [Control Room](https://control.quriobot.com) to configure your bot.
+2. After saving you will see this success message. Visit [Control Room](https://control.quriobot.com) to configure your bot.
 
 == Changelog ==
 
-= 1.0 =
+= 1.0.4 =
 * Initial release.
 

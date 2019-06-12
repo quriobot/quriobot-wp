@@ -41,7 +41,7 @@
             ?>
                 Learn more how to find your bot path <a target="_blank" href="https://quriobot.freshdesk.com/a/solutions/articles/35000007889">here</a>.
             </p>
-            <p><?php _e('Input your bot path into the field below to install your bot to you WordPress website.', 'quriobot'); ?></p>
+            <p><?php _e('Input your bot path into the field below to install your bot to your WordPress website.', 'quriobot'); ?></p>
 
             <table class="form-table">
                 <tbody>

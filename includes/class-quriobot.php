@@ -57,7 +57,7 @@ class Quriobot {
 	}
 
 	private function enqueue_script() {
-		add_action( 'wp_head', array($this, 'quriobot_script') );
+		add_action( 'wp_footer', array($this, 'quriobot_script') );
 	}
 
     private function enqueue_admin_styles() {
