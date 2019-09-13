@@ -52,7 +52,7 @@ class Quriobot {
 		}
 
 		echo '
-		<script type="text/javascript" src="https://quriobot.com/qb/widget/' . $quriobot_path . '" async defer></script>
+		<script type="text/javascript" src="https://quriobot.com/qb/widget/' . $quriobot_path . '?lang=' . strtolower(str_replace('_', '-', get_locale())) . '" async defer></script>
 		';
 	}
 
