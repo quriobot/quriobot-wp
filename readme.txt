@@ -70,7 +70,7 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 
 == Changelog ==
 
-= 1.0.8 =
+= 1.0.9 =
 * Respect the current site language.
 
 = 1.0.5 =
