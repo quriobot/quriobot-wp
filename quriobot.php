@@ -4,7 +4,7 @@
  * Description: Increase conversion with an easy to use chatbot.
  * Author: Quriobot
  * Author URI: https://quriobot.com/
- * Version: 1.0.3
+ * Version: 1.0.7
  * License: GPLv3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
  * Text Domain: quriobot
