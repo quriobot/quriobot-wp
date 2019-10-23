@@ -3,7 +3,7 @@ Contributors: quriobot
 Tags: quriobot,chatbots,surveys,support
 Requires at least: 4.6
 Tested up to: 5.3
-Stable tag: 1.0.10
+Stable tag: 1.0.11
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
@@ -69,6 +69,10 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 2. After saving you will see this success message. Visit [Control Room](https://control.quriobot.com) to configure your bot.
 
 == Changelog ==
+
+
+= 1.0.11 =
+* Update tested WP version.
 
 = 1.0.10 =
 * Respect the current site language.
