@@ -2,8 +2,8 @@
 Contributors: quriobot
 Tags: quriobot,chatbots,surveys,support
 Requires at least: 4.6
-Tested up to: 5.3
-Stable tag: 1.0.11
+Tested up to: 5.4.1
+Stable tag: 1.0.12
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
