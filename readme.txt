@@ -70,6 +70,8 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 
 == Changelog ==
 
+= 1.0.13 =
+* Update tested WP version.
 
 = 1.0.11 =
 * Update tested WP version.
