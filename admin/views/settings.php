@@ -47,12 +47,36 @@
                 <tbody>
                     <tr>
                         <th scope="row">
-                        <label for="quriobot_path"><?php esc_html_e( 'Bot path', 'quriobot'); ?></label>
+                        <label for="quriobot_path"><?php esc_html_e( 'Bot paths', 'quriobot'); ?></label>
                         </th>
 
                         <td>
-                        <input name="quriobot_path" id="quriobot_path" value="<?php echo esc_attr( get_option('quriobot_path') ); ?>" />
-                        <p class="description" id="wp_quriobot_path_description"><?php esc_html_e( '(Leave blank to disable)', 'quriobot' ); ?></p>
+                        <textarea name="quriobot_path" id="quriobot_path" rows="10" cols="100"><?php echo esc_attr( get_option('quriobot_path') ); ?></textarea>
+                        <p class="description" id="wp_quriobot_path_description">
+                            <?php esc_html_e( '(Leave blank to disable)', 'quriobot' ); ?>
+                            <br />
+                            <?php esc_html_e( 'If you want to put multiple bots on your website, add each bot path on the separate line', 'quriobot' ); ?>
+                        </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                        <label for="quriobot_init"><?php esc_html_e( 'Customize bot initialization', 'quriobot'); ?></label>
+                        </th>
+
+                        <td>
+                        <textarea
+                            name="quriobot_init" id="quriobot_init" rows="10" cols="100"
+                            placeholder="window.qbOptions.push({
+    use: 'asdfasdfasfasd/adfadfasdfasd',
+    lang: document.getElementsByTagName('html')[0].getAttribute('lang').toLowerCase()
+})"
+                            ><?php echo esc_attr( get_option('quriobot_init') ); ?></textarea>
+                        <p class="description" id="wp_quriobot_init_description">
+                            <?php esc_html_e( '(Leave blank to disable)', 'quriobot' ); ?>
+                            <br />
+                            <?php esc_html_e( 'If you need to fully customize the options provided for the widget initalization, provide the code which will be put into <script> tag before the widget <script> tag', 'quriobot' ); ?>
+                        </p>
                         </td>
                     </tr>
                 </tbody>
