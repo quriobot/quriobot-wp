@@ -7,10 +7,12 @@ class Quriobot {
 
 	public function __construct()
 	{
-		
-	}
 
-	public function init() 
+    }
+
+    const VERSION = '2.0.0';
+
+	public function init()
 	{
 		$this->init_admin();
     	$this->enqueue_script();
@@ -18,14 +20,18 @@ class Quriobot {
 	}
 
 	public function init_admin() {
-		register_setting( 'quriobot', 'quriobot_path' );
+        $args = array(
+            'type' => 'array',
+        );
+		register_setting( 'quriobot', 'quriobot_path', $args );
+		register_setting( 'quriobot', 'quriobot_init', $args );
     	add_action( 'admin_menu', array( $this, 'create_nav_page' ) );
 	}
 
 	public function create_nav_page() {
 		add_options_page(
-		  esc_html__( 'Quriobot', 'quriobot' ), 
-		  esc_html__( 'Quriobot', 'quriobot' ), 
+		  esc_html__( 'Quriobot', 'quriobot' ),
+		  esc_html__( 'Quriobot', 'quriobot' ),
 		  'manage_options',
 		  'quriobot_settings',
 		  array($this,'admin_view')
@@ -40,20 +46,37 @@ class Quriobot {
 	public static function quriobot_script()
 	{
 		$quriobot_path = get_option( 'quriobot_path' );
+		$quriobot_init = get_option( 'quriobot_init' );
 		$is_admin = is_admin();
 
 		$quriobot_path = trim($quriobot_path);
-		if (!$quriobot_path) {
+		if (!$quriobot_path && !$quriobot_init) {
 			return;
 		}
 
 		if ( $is_admin ) {
 			return;
-		}
+        }
 
-		echo '
-		<script type="text/javascript" src="https://botsrv.com/qb/widget/' . $quriobot_path . '?lang=' . strtolower(str_replace('_', '-', get_locale())) . '" async defer></script>
-		';
+        function prepareValue($item)
+        {
+            $item = trim($item);
+            return [
+                "use" => $item,
+                "language" => strtolower(str_replace('_', '-', get_locale())),
+            ];
+        }
+        $qbOptions = array_unique(array_map('prepareValue', explode(PHP_EOL, $quriobot_path)));
+        $code = $quriobot_init ? $quriobot_init : 'window.qbOptions = window.qbOptions.concat('.json_encode($qbOptions).');';
+        echo '
+<script type="text/javascript">
+    if (!Array.isArray(window.qbOptions)) {
+        window.qbOptions = []
+    }
+    '.$code.'
+</script>
+<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.3b60b3c8.js" integrity="sha384-LB1Q1gRzB8Odjx7Txx1C59uHFXUgVMuCPEMV61o8sHMUYvHFMvmY9qLhd4GNSCT5" crossorigin="anonymous" async defer></script>
+';
 	}
 
 	private function enqueue_script() {
