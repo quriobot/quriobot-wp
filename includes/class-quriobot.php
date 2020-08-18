@@ -10,7 +10,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.0.0';
+    const VERSION = '2.0.1';
 
 	public function init()
 	{
@@ -58,15 +58,14 @@ class Quriobot {
 			return;
         }
 
-        function prepareValue($item)
-        {
+        $prepareValue = function($item) {
             $item = trim($item);
             return [
                 "use" => $item,
                 "language" => strtolower(str_replace('_', '-', get_locale())),
             ];
-        }
-        $qbOptions = array_unique(array_map('prepareValue', explode(PHP_EOL, $quriobot_path)));
+        };
+        $qbOptions = array_unique(array_map($prepareValue, explode(PHP_EOL, $quriobot_path)));
         $code = $quriobot_init ? $quriobot_init : 'window.qbOptions = window.qbOptions.concat('.json_encode($qbOptions).');';
         echo '
 <script type="text/javascript">
