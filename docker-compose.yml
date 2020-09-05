@@ -4,7 +4,6 @@ services:
 
   wordpress:
     image: wordpress:latest
-    restart: always
     ports:
       - 18080:80
     environment:
@@ -17,7 +16,6 @@ services:
      - .:/opt/quriobot-wp
   db:
     image: mysql:5.7
-    restart: always
     environment:
       MYSQL_DATABASE: exampledb
       MYSQL_USER: exampleuser
