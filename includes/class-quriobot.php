@@ -10,7 +10,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.0.1';
+    const VERSION = '2.1.0';
 
 	public function init()
 	{
@@ -74,12 +74,12 @@ class Quriobot {
     }
     '.$code.'
 </script>
-<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.3b60b3c8.js" integrity="sha384-LB1Q1gRzB8Odjx7Txx1C59uHFXUgVMuCPEMV61o8sHMUYvHFMvmY9qLhd4GNSCT5" crossorigin="anonymous" async defer></script>
+<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.3b60b3c8.js" integrity="sha384-LB1Q1gRzB8Odjx7Txx1C59uHFXUgVMuCPEMV61o8sHMUYvHFMvmY9qLhd4GNSCT5" crossorigin="anonymous" defer></script>
 ';
 	}
 
 	private function enqueue_script() {
-		add_action( 'wp_footer', array($this, 'quriobot_script'), 100);
+		add_action( 'wp_head', array($this, 'quriobot_script'), 100);
 	}
 
     private function enqueue_admin_styles() {

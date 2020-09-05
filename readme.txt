@@ -4,7 +4,7 @@ Tags: quriobot,chatbots,surveys,support
 Requires at least: 4.6
 Requires PHP: 5.3
 Tested up to: 5.5
-Stable tag: 2.0.1
+Stable tag: 2.1.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
@@ -70,6 +70,9 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 2. After saving you will see this success message. Visit [Control Room](https://control.quriobot.com) to configure your bot.
 
 == Changelog ==
+
+= 2.1.0 =
+* Move the script to head to improve the load speed
 
 = 2.0.1 =
 * Fix an incompatibility issue with PHP, set the minimum required PHP version to 5.3.0.
