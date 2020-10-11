@@ -10,7 +10,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.1.0';
+    const VERSION = '2.2.0';
 
 	public function init()
 	{
@@ -72,9 +72,9 @@ class Quriobot {
     if (!Array.isArray(window.qbOptions)) {
         window.qbOptions = []
     }
-    '.$code.'
+    '.$code. '
 </script>
-<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.3b60b3c8.js" integrity="sha384-LB1Q1gRzB8Odjx7Txx1C59uHFXUgVMuCPEMV61o8sHMUYvHFMvmY9qLhd4GNSCT5" crossorigin="anonymous" defer></script>
+<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.569962bc.js" integrity="sha384-K/f0+98iAtVIR4d1/PK56iJQy+LZE1+yZ1AniQhAWTapmTROEIWfPNnP7L+4SSGR" crossorigin="anonymous" defer></script>
 ';
 	}
 
