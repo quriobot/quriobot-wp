@@ -5,7 +5,7 @@ services:
   wordpress:
     image: wordpress:latest
     ports:
-      - 18080:80
+      - 8080:80
     environment:
       WORDPRESS_DB_HOST: db
       WORDPRESS_DB_USER: exampleuser
