@@ -10,7 +10,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.2.2';
+    const VERSION = '2.2.3';
 
 	public function init()
 	{
@@ -74,7 +74,7 @@ class Quriobot {
     }
     '.$code. '
 </script>
-<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.621a052d.js" integrity="sha384-enKKsgJkpDs7py3hhgZRFXqTXe2Xyt0F4M0mLt2f1NDBdRxJ05G6AV7GtQxaS2G0" crossorigin="anonymous" defer></script>
+<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.6b589306.js" integrity="sha384-mPaYfYk97ibJ4M4piMlhxnM1QOKXTsB0u2Se9zbDMWxi6HRkFJdziXAOnWdx6WMW" crossorigin="anonymous" defer></script>
 ';
 	}
 
