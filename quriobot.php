@@ -26,7 +26,7 @@ function quriobot_plugin_init() {
 			/**
 			 * @var Const Plugin Version Number
 			 */
-			const VERSION = '2.2.7';
+			const VERSION = '2.2.8';
 
 			/**
 			 * @var Singleton The reference the *Singleton* instance of this class
