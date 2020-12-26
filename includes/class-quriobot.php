@@ -1,3 +1,4 @@
+
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -10,7 +11,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.2.10';
+    const VERSION = '2.3.0';
 
 	public function init()
 	{
@@ -57,12 +58,12 @@ class Quriobot {
 		if ( $is_admin ) {
 			return;
         }
-
         $prepareValue = function($item) {
             $item = trim($item);
+            $current_lang = isset($_SERVER['HTTP_X_GT_LANG']) ? $_SERVER['HTTP_X_GT_LANG'] : get_locale();
             return [
                 "use" => $item,
-                "language" => strtolower(str_replace('_', '-', get_locale())),
+                "language" => strtolower(str_replace('_', '-', $current_lang)),
             ];
         };
         $qbOptions = array_unique(array_map($prepareValue, explode(PHP_EOL, $quriobot_path)), SORT_REGULAR);
