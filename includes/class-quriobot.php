@@ -11,7 +11,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.3.1';
+    const VERSION = '2.3.2';
 
 	public function init()
 	{
@@ -80,7 +80,7 @@ class Quriobot {
     }
 
 	private function enqueue_script() {
-		add_action( 'wp_head', array($this, 'quriobot_script'), 100);
+		add_action( 'wp_head', array($this, 'quriobot_script'));
 	}
 
     private function enqueue_admin_styles() {
