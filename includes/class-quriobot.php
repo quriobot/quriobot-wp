@@ -11,7 +11,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.3.2';
+    const VERSION = '2.3.3';
 
 	public function init()
 	{
@@ -58,7 +58,10 @@ class Quriobot {
 		if ( $is_admin ) {
 			return;
         }
-        $current_lang = isset($_SERVER['HTTP_X_GT_LANG']) ? $_SERVER['HTTP_X_GT_LANG'] : get_locale();
+        $current_lang = get_locale();
+        if (isset($_SERVER['HTTP_X_GT_LANG'])) {
+            $current_lang = $_SERVER['HTTP_X_GT_LANG'];
+        }
         $prepareValue = function($item) use ($current_lang) {
             $item = trim($item);
             return [
@@ -80,7 +83,7 @@ class Quriobot {
     }
 
 	private function enqueue_script() {
-		add_action( 'wp_head', array($this, 'quriobot_script'));
+		add_action( 'wp_head', array($this, 'quriobot_script'), 1000);
 	}
 
     private function enqueue_admin_styles() {
