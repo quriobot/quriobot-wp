@@ -11,7 +11,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.3.0';
+    const VERSION = '2.3.1';
 
 	public function init()
 	{
@@ -58,9 +58,9 @@ class Quriobot {
 		if ( $is_admin ) {
 			return;
         }
-        $prepareValue = function($item) {
+        $current_lang = isset($_SERVER['HTTP_X_GT_LANG']) ? $_SERVER['HTTP_X_GT_LANG'] : get_locale();
+        $prepareValue = function($item) use ($current_lang) {
             $item = trim($item);
-            $current_lang = isset($_SERVER['HTTP_X_GT_LANG']) ? $_SERVER['HTTP_X_GT_LANG'] : get_locale();
             return [
                 "use" => $item,
                 "language" => strtolower(str_replace('_', '-', $current_lang)),
