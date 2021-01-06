@@ -1,4 +1,3 @@
-
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -11,7 +10,7 @@ class Quriobot {
 
     }
 
-    const VERSION = '2.3.3';
+    const VERSION = '2.3.4';
 
 	public function init()
 	{
@@ -78,7 +77,7 @@ class Quriobot {
     }
     '.$code. '
 </script>
-<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.60e6ebaf.js" integrity="sha384-j1YqOQ5ZRK2B7gGOpvl1LvC61bpIno+BpO4wdGkiy98TmJqR3mq+Xa46QVhUfnQi" crossorigin="anonymous" defer></script>
+<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.90b5a0ff.js" integrity="sha384-NVM8PybJp1yFZ4kLUQaM1vkqGoIL2QBFpYZb2O5sy5Vtnf7OYkjgFA6YDwmuwbLl" crossorigin="anonymous" defer></script>
 ';
     }
 
