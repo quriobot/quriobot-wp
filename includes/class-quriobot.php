@@ -1,99 +1,122 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+if (!defined('ABSPATH')) {
+    exit;
 }
 
-class Quriobot {
+class Quriobot
+{
 
-	public function __construct()
-	{
-
+    public function __construct()
+    {
     }
 
-    const VERSION = '2.3.4';
+    const VERSION = '2.4.0';
 
-	public function init()
-	{
-		$this->init_admin();
-    	$this->enqueue_script();
-    	$this->enqueue_admin_styles();
-	}
+    public function init()
+    {
+        $this->init_admin();
+        $this->enqueue_script();
+        $this->enqueue_admin_styles();
+    }
 
-	public function init_admin() {
+    public function init_admin()
+    {
         $args = array(
             'type' => 'array',
         );
-		register_setting( 'quriobot', 'quriobot_path', $args );
-		register_setting( 'quriobot', 'quriobot_init', $args );
-    	add_action( 'admin_menu', array( $this, 'create_nav_page' ) );
-	}
+        register_setting('quriobot', 'quriobot_path', $args);
+        register_setting('quriobot', 'quriobot_init', $args);
+        add_action('admin_menu', array($this, 'create_nav_page'));
+    }
 
-	public function create_nav_page() {
-		add_options_page(
-		  esc_html__( 'Quriobot', 'quriobot' ),
-		  esc_html__( 'Quriobot', 'quriobot' ),
-		  'manage_options',
-		  'quriobot_settings',
-		  array($this,'admin_view')
-		);
-	}
+    public function create_nav_page()
+    {
+        add_options_page(
+            esc_html__('Quriobot', 'quriobot'),
+            esc_html__('Quriobot', 'quriobot'),
+            'manage_options',
+            'quriobot_settings',
+            array($this, 'admin_view')
+        );
+    }
 
-	public static function admin_view()
-	{
-		require_once plugin_dir_path( __FILE__ ) . '/../admin/views/settings.php';
-	}
+    public static function admin_view()
+    {
+        require_once plugin_dir_path(__FILE__) . '/../admin/views/settings.php';
+    }
 
-	public static function quriobot_script()
-	{
-		$quriobot_path = get_option( 'quriobot_path' );
-		$quriobot_init = get_option( 'quriobot_init' );
-		$is_admin = is_admin();
+    public static function quriobot_script()
+    {
+        $quriobot_path = get_option('quriobot_path');
+        $quriobot_init = get_option('quriobot_init');
+        $is_admin = is_admin();
 
-		$quriobot_path = trim($quriobot_path);
-		if (!$quriobot_path && !$quriobot_init) {
-			return;
-		}
+        $quriobot_path = trim($quriobot_path);
+        if (!$quriobot_path && !$quriobot_init) {
+            return;
+        }
 
-		if ( $is_admin ) {
-			return;
+        if ($is_admin) {
+            return;
         }
         $current_lang = get_locale();
         if (isset($_SERVER['HTTP_X_GT_LANG'])) {
             $current_lang = $_SERVER['HTTP_X_GT_LANG'];
         }
-        $prepareValue = function($item) use ($current_lang) {
+        $current_user_data = null;
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+            /*
+            'user_firstname'             => 'first_name',
+                    'user_lastname'              => 'last_name',
+                    'user_description'           => 'description',
+            user_login, user_pass, user_nicename, user_email, user_url, user_registered, user_activation_key, user_status, display_name, spam (multisite only), deleted
+            */
+            $current_user_data = [
+                "email" => $current_user->user_email,
+                "firstName" => $current_user->get('first_name'),
+                "lastName" => $current_user->get('last_name'),
+                "id" => $current_user->get('id'),
+                "avatar" => get_avatar_url($current_user->get('id')),
+            ];
+        };
+        $prepareValue = function ($item) use ($current_lang, $current_user_data) {
             $item = trim($item);
-            return [
+            $res = [
                 "use" => $item,
                 "language" => strtolower(str_replace('_', '-', $current_lang)),
             ];
+            if ($current_user_data) {
+                $res["visitor"] = $current_user_data;
+            };
+            return $res;
         };
         $qbOptions = array_unique(array_map($prepareValue, explode(PHP_EOL, $quriobot_path)), SORT_REGULAR);
-        $code = $quriobot_init ? $quriobot_init : 'window.qbOptions = window.qbOptions.concat('.json_encode($qbOptions).');';
+        $code = $quriobot_init ? $quriobot_init : 'window.qbOptions = window.qbOptions.concat(' . json_encode($qbOptions) . ');';
         echo '
 <script type="text/javascript">
     if (!Array.isArray(window.qbOptions)) {
         window.qbOptions = []
     }
-    '.$code. '
+    ' . $code . '
 </script>
-<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.90b5a0ff.js" integrity="sha384-NVM8PybJp1yFZ4kLUQaM1vkqGoIL2QBFpYZb2O5sy5Vtnf7OYkjgFA6YDwmuwbLl" crossorigin="anonymous" defer></script>
+<script type="text/javascript" src="https://static.botsrv.com/website/js/widget2.8b218cc3.js" integrity="sha384-nCbe9zbFGil4I21wDjtQKYpeD9QqSZQ8suMeRIxmO975K9b9rxnnuA0Q1VJH8if2" crossorigin="anonymous" defer></script>
 ';
     }
 
-	private function enqueue_script() {
-		add_action( 'wp_head', array($this, 'quriobot_script'), 1000);
-	}
-
-    private function enqueue_admin_styles() {
-        add_action( 'admin_enqueue_scripts', array($this, 'quriobot_admin_styles' ) );
+    private function enqueue_script()
+    {
+        add_action('wp_head', array($this, 'quriobot_script'), 1000);
     }
 
-    public static function quriobot_admin_styles() {
-        wp_register_style( 'quriobot_custom_admin_style', plugins_url( '../admin/static/quriobot-admin.css', __FILE__ ), array(), '20190701', 'all' );
-        wp_enqueue_style( 'quriobot_custom_admin_style' );
+    private function enqueue_admin_styles()
+    {
+        add_action('admin_enqueue_scripts', array($this, 'quriobot_admin_styles'));
     }
 
+    public static function quriobot_admin_styles()
+    {
+        wp_register_style('quriobot_custom_admin_style', plugins_url('../admin/static/quriobot-admin.css', __FILE__), array(), '20190701', 'all');
+        wp_enqueue_style('quriobot_custom_admin_style');
+    }
 }
-
-?>
