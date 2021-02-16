@@ -71,6 +71,9 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 
 == Changelog ==
 
+= 2.4.10 =
+* Fix user ID deprecation warning.
+
 = 2.4.9 =
 * Use the latest version of the embed code.
 

@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.4.9';
+    const VERSION = '2.4.10';
 
     public function init()
     {
@@ -76,8 +76,8 @@ class Quriobot
                 "email" => $current_user->user_email,
                 "firstName" => $current_user->get('first_name'),
                 "lastName" => $current_user->get('last_name'),
-                "id" => $current_user->get('id'),
-                "avatar" => get_avatar_url($current_user->get('id')),
+                "id" => $current_user->ID,
+                "avatar" => get_avatar_url($current_user->ID),
             ];
         };
         $prepareValue = function ($item) use ($current_lang, $current_user_data) {
