@@ -71,8 +71,11 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 
 == Changelog ==
 
-= 2.5.6 =
+= 2.5.7 =
 * Use the latest version of the embed code.
+
+= 2.5.6 =
+* DO NOT USE THIS VERSION - has wrong SRI hash.
 
 = 2.5.5 =
 * Use the latest version of the embed code.
