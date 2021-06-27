@@ -71,7 +71,7 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 
 == Changelog ==
 
-= 2.7.3 =
+= 2.7.4 =
 * AMP support.
 
 = 2.6.4 =
