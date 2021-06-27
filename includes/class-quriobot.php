@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.6.4';
+    const VERSION = '2.7.0';
 
     public function init()
     {
@@ -92,21 +92,63 @@ class Quriobot
             return $res;
         };
         $qbOptions = array_unique(array_map($prepareValue, explode(PHP_EOL, $quriobot_path)), SORT_REGULAR);
-        $code = $quriobot_init ? $quriobot_init : 'window.qbOptions = window.qbOptions.concat(' . json_encode($qbOptions) . ');';
-        echo '
-<script type="text/javascript">
-    if (!Array.isArray(window.qbOptions)) {
-        window.qbOptions = []
-    }
-    ' . $code . '
-</script>
-<script type="text/javascript" src="https://static.botsrv2.com/website/js/widget2.f94f5018.min.js" integrity="sha384-32fbZ9qRrawWieL/uozog4N+3zpgWk1h8pw8wAJggzB0e2sn+l3Bz4Ruyph4m7OM" crossorigin="anonymous" defer data-no-minify="1"></script>
-';
+        return $quriobot_init ? $quriobot_init : 'window.qbOptions = '. json_encode($qbOptions) . ';';
     }
 
     private function enqueue_script()
     {
-        add_action('wp_head', array($this, 'quriobot_script'), 1000);
+        $cache_expiration = 3600 * 24 * 10; // 10 days
+        $quriobot_path = trim(explode(PHP_EOL, get_option('quriobot_path'))[0]);
+        if (amp_is_request()) {
+            $cache_key = sprintf('quriobot.bot.frontend.embed_code_amp.%s', $quriobot_path);
+            $embed_code_amp = get_transient($cache_key);
+            if (!$embed_code_amp) {
+                $res = Requests::get(sprintf('https://api.botsrv2.com/0.0.1/frontend/bots/%s', $quriobot_path));
+                if ($res->success) {
+                    $bot = json_decode($res->body);
+                    if ($bot) {
+                        $embed_code_amp = $bot->frontend->embed_code_amp;
+                        set_transient($cache_key, $embed_code_amp, $cache_expiration);
+                    }
+                }
+            }
+            if ($embed_code_amp) {
+                $quriobot_amp_body = function () use (&$embed_code_amp)
+                {
+                    print($embed_code_amp->body);
+                };
+                $quriobot_amp_head = function() use (&$embed_code_amp)
+                {
+                    print($embed_code_amp->head);
+                };
+                add_action('wp_head', $quriobot_amp_head, 1000);
+                add_action('amp_print_analytics', $quriobot_amp_body, 1000);
+            }
+        } else {
+            $cache_key = sprintf('quriobot.bot.frontend.embed_code_2.%s', $quriobot_path);
+            $embed_code_2 = get_transient($cache_key);
+            if (!$embed_code_2) {
+                $res = Requests::get(sprintf('https://api.botsrv2.com/0.0.1/frontend/bots/%s', $quriobot_path));
+                if ($res->success) {
+                    $bot = json_decode($res->body);
+                    if ($bot) {
+                        $embed_code_2 = $bot->frontend->embed_code_2;
+                        set_transient($cache_key, $embed_code_2, $cache_expiration);
+                    }
+                }
+            }
+            if ($embed_code_2) {
+                $code = $this->quriobot_script();
+                $quriobot_head = function () use (&$embed_code_2, &$code) {
+                    printf('
+    %s
+    <script type="text/javascript">
+    %s
+    </script>', $embed_code_2, $code);
+                };
+                add_action('wp_head', $quriobot_head, 1000);
+            }
+        }
     }
 
     private function enqueue_admin_styles()
