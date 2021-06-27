@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.7.2';
+    const VERSION = '2.7.3';
 
     public function init()
     {
@@ -100,7 +100,7 @@ class Quriobot
         $cache_expiration = 3600 * 24 * 10; // 10 days
         $quriobot_path = trim(explode(PHP_EOL, get_option('quriobot_path'))[0]);
         $url = sprintf('https://api.botsrv2.com/0.0.1/frontend/bots/%s', $quriobot_path);
-        $headers = ['X-For-Embed' => 'true'];
+        $headers = ['X-For-Embed-Code' => 'true'];
         if (function_exists('amp_is_request') && amp_is_request()) {
             $cache_key = sprintf('quriobot.%s.bot.frontend.embed_code_amp.%s', static::VERSION, $quriobot_path);
             $embed_code_amp = get_transient($cache_key);
@@ -131,7 +131,6 @@ class Quriobot
             $embed_code_2 = get_transient($cache_key);
             if (!$embed_code_2) {
                 $res = Requests::get($url, $headers);
-                error_log(json_encode($res));
                 if ($res->success) {
                     $bot = json_decode($res->body);
                     if ($bot) {

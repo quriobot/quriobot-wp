@@ -4,7 +4,7 @@ Tags: quriobot,chatbots,surveys,support
 Requires at least: 4.6
 Requires PHP: 5.3
 Tested up to: 5.7
-Stable tag: 2.7.2
+Stable tag: 2.7.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
@@ -71,7 +71,7 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 
 == Changelog ==
 
-= 2.7.2 =
+= 2.7.3 =
 * AMP support.
 
 = 2.6.4 =
