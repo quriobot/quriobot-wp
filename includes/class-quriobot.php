@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.7.0';
+    const VERSION = '2.7.1';
 
     public function init()
     {
@@ -99,7 +99,7 @@ class Quriobot
     {
         $cache_expiration = 3600 * 24 * 10; // 10 days
         $quriobot_path = trim(explode(PHP_EOL, get_option('quriobot_path'))[0]);
-        if (amp_is_request()) {
+        if (function_exists('amp_is_request') && amp_is_request()) {
             $cache_key = sprintf('quriobot.bot.frontend.embed_code_amp.%s', $quriobot_path);
             $embed_code_amp = get_transient($cache_key);
             if (!$embed_code_amp) {
