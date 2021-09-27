@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.7.4';
+    const VERSION = '2.7.6';
 
     public function init()
     {
