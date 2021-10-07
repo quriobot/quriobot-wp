@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.7.6';
+    const VERSION = '2.7.7';
 
     public function init()
     {
@@ -99,6 +99,9 @@ class Quriobot
     {
         $cache_expiration = 3600 * 24 * 10; // 10 days
         $quriobot_path = trim(explode(PHP_EOL, get_option('quriobot_path'))[0]);
+        if (!$quriobot_path || empty($quriobot_path)) {
+            return;
+        }
         $url = sprintf('https://api.botsrv2.com/0.0.1/frontend/bots/%s', $quriobot_path);
         $headers = ['X-For-Embed-Code' => 'true'];
         if (function_exists('amp_is_request') && amp_is_request()) {
@@ -112,6 +115,8 @@ class Quriobot
                         $embed_code_amp = $bot->frontend->embed_code_amp;
                         set_transient($cache_key, $embed_code_amp, $cache_expiration);
                     }
+                } else if ($res->status_code == 404 || $res->status_code == 530 || $res->status_code == 531 || $res->status_code == 532) {
+                    set_transient($cache_key, '', $cache_expiration);
                 }
             }
             if ($embed_code_amp) {
@@ -137,6 +142,8 @@ class Quriobot
                         $embed_code_2 = $bot->frontend->embed_code_2;
                         set_transient($cache_key, $embed_code_2, $cache_expiration);
                     }
+                } else if ($res->status_code == 404 || $res->status_code == 530 || $res->status_code == 531 || $res->status_code == 532) {
+                    set_transient($cache_key, '', $cache_expiration);
                 }
             }
             if ($embed_code_2) {
