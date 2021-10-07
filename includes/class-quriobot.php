@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.7.7';
+    const VERSION = '2.7.8';
 
     public function init()
     {
@@ -116,7 +116,7 @@ class Quriobot
                         set_transient($cache_key, $embed_code_amp, $cache_expiration);
                     }
                 } else if ($res->status_code == 404 || $res->status_code == 530 || $res->status_code == 531 || $res->status_code == 532) {
-                    set_transient($cache_key, '', $cache_expiration);
+                    set_transient($cache_key, ' ', $cache_expiration);
                 }
             }
             if ($embed_code_amp) {
@@ -143,7 +143,7 @@ class Quriobot
                         set_transient($cache_key, $embed_code_2, $cache_expiration);
                     }
                 } else if ($res->status_code == 404 || $res->status_code == 530 || $res->status_code == 531 || $res->status_code == 532) {
-                    set_transient($cache_key, '', $cache_expiration);
+                    set_transient($cache_key, ' ', $cache_expiration);
                 }
             }
             if ($embed_code_2) {
