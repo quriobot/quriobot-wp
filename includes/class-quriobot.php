@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.7.8';
+    const VERSION = '2.7.9';
 
     public function init()
     {
@@ -108,7 +108,7 @@ class Quriobot
             $cache_key = sprintf('quriobot.%s.bot.frontend.embed_code_amp.%s', static::VERSION, $quriobot_path);
             $embed_code_amp = get_transient($cache_key);
             if (!$embed_code_amp) {
-                $res = Requests::get($url, $headers);
+                $res = Requests::get($url, $headers, array('verify' => false));
                 if ($res->success) {
                     $bot = json_decode($res->body);
                     if ($bot) {
