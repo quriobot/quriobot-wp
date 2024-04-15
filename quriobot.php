@@ -4,7 +4,7 @@
  * Description: Increase conversion with an easy to use chatbot.
  * Author: Quriobot
  * Author URI: https://quriobot.com/
- * Version: 2.8.1
+ * Version: 2.8.2
  * License: GPLv3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
  * Text Domain: quriobot
@@ -25,7 +25,7 @@ function quriobot_plugin_init() {
 			/**
 			 * @var Const Plugin Version Number
 			 */
-			const VERSION = '2.8.1';
+			const VERSION = '2.8.2';
 
 			/**
 			 * @var Singleton The reference the *Singleton* instance of this class
