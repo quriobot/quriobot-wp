@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fquriobot%2Fquriobot-wp.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fquriobot%2Fquriobot-wp?ref=badge_shield)
+
 === Quriobot ===
 Contributors: quriobot
 Tags: quriobot,chatbots,surveys,support
@@ -224,3 +226,7 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 = 1.0.5 =
 * Initial release.
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fquriobot%2Fquriobot-wp.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fquriobot%2Fquriobot-wp?ref=badge_large)
