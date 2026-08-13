@@ -25,10 +25,24 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 
-if ! grep -qE "^= ${header//./\\.} =$" readme.txt; then
-  echo "FAIL: readme.txt has no '= $header =' changelog entry" >&2
-  exit 1
-fi
+# The Upgrade Notice is what WordPress shows in the update prompt, so a release
+# without one tells users nothing about why they should take it.
+for section in 'Changelog' 'Upgrade Notice'; do
+  if ! grep -q "^== ${section} ==$" readme.txt; then
+    echo "FAIL: readme.txt has no '== ${section} ==' section" >&2
+    exit 1
+  fi
+  # Each section is checked on its own, so two entries in one and none in the
+  # other cannot pass.
+  body=$(awk -v want="== ${section} ==" '
+    /^== .* ==$/ { inside = ($0 == want); next }
+    inside { print }
+  ' readme.txt)
+  if ! printf '%s\n' "$body" | grep -qE "^= ${header//./\\.} =$"; then
+    echo "FAIL: readme.txt has no '= $header =' entry under '== ${section} =='" >&2
+    exit 1
+  fi
+done
 
 # The support floors are declared twice and must not drift apart.
 for field in "Requires at least" "Requires PHP"; do

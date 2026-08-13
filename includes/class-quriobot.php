@@ -10,7 +10,7 @@ class Quriobot
     {
     }
 
-    const VERSION = '2.9.2';
+    const VERSION = '2.9.3';
 
     public function init()
     {
@@ -22,6 +22,10 @@ class Quriobot
         // early. This also keeps the API call off admin, cron, REST and login
         // requests, which never render the widget.
         add_action('wp', array($this, 'enqueue_script'));
+
+        // Registered outside init_admin() so WP-CLI and programmatic writes clear
+        // the cache too, not just the settings screen.
+        add_filter('pre_update_option_quriobot_path', array($this, 'flush_cache_on_save'), 10, 2);
 
         $this->enqueue_admin_styles();
     }
@@ -56,7 +60,7 @@ class Quriobot
      * Browsers submit textareas with CRLF line endings regardless of the server
      * platform, so this cannot rely on PHP_EOL.
      */
-    private static function split_lines($value)
+    public static function split_lines($value)
     {
         if (!is_string($value) || '' === trim($value)) {
             return array();
@@ -236,6 +240,57 @@ class Quriobot
         return in_array($status, array(404, 530, 531, 532), true);
     }
 
+    /** The embed payloads this plugin caches, one per rendering mode. */
+    const EMBED_FIELDS = array('embed_code_2', 'embed_code_amp');
+
+    /**
+     * The transient name holding one embed payload.
+     *
+     * The single definition of the cache key: writers, readers and the flush all
+     * go through here, so the format cannot drift between them and quietly turn
+     * the flush into a no-op.
+     */
+    public static function cache_key($field, $path)
+    {
+        return sprintf('quriobot.%s.bot.frontend.%s.%s', self::VERSION, $field, $path);
+    }
+
+    /**
+     * Drops every cached embed payload for the given bot paths.
+     */
+    public static function forget_bot_paths($paths)
+    {
+        foreach ($paths as $path) {
+            foreach (self::EMBED_FIELDS as $field) {
+                $key = self::cache_key($field, $path);
+                delete_transient($key);
+                delete_transient($key . self::RETRY_SUFFIX);
+            }
+        }
+    }
+
+    /**
+     * Clears the cached embed codes whenever the bot paths are saved.
+     *
+     * Deliberately hooked to a filter rather than `update_option_quriobot_path`:
+     * update_option() short-circuits when the submitted value is identical to the
+     * stored one, so the action would never fire for an unchanged save — which is
+     * precisely what someone does to pick up a bot they just edited in the Control
+     * Room. This filter runs on every save attempt. Both the old and the new paths
+     * are cleared so switching bots leaves nothing stale behind.
+     *
+     * The value is passed through untouched.
+     */
+    public function flush_cache_on_save($value, $old_value)
+    {
+        self::forget_bot_paths(array_merge(
+            self::split_lines($old_value),
+            self::split_lines($value)
+        ));
+
+        return $value;
+    }
+
     /**
      * Cache sentinel meaning "the API told us this bot has no embed code".
      *
@@ -352,7 +407,7 @@ class Quriobot
 
         if (function_exists('amp_is_request') && amp_is_request()) {
             $embed_code_amp = self::get_embed_code(
-                sprintf('quriobot.%s.bot.frontend.embed_code_amp.%s', static::VERSION, $quriobot_path),
+                self::cache_key('embed_code_amp', $quriobot_path),
                 $quriobot_path,
                 'embed_code_amp',
                 $cache_expiration
@@ -377,7 +432,7 @@ class Quriobot
             }
         } else {
             $embed_code_2 = self::get_embed_code(
-                sprintf('quriobot.%s.bot.frontend.embed_code_2.%s', static::VERSION, $quriobot_path),
+                self::cache_key('embed_code_2', $quriobot_path),
                 $quriobot_path,
                 'embed_code_2',
                 $cache_expiration

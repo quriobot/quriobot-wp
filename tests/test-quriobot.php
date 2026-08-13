@@ -80,6 +80,10 @@ function qb_render($responder, $flush = true, $amp = false)
     remove_all_actions('wp');
     remove_all_actions('wp_head');
     remove_all_actions('amp_print_analytics');
+    // Each render registers this too; without clearing it, dozens of stale
+    // instances accumulate and the flush assertions would pass on one of those
+    // rather than on the registration under test.
+    remove_all_filters('pre_update_option_quriobot_path');
 
     $seen = array();
     $intercept = function ($preempt, $args, $url) use ($responder, &$seen) {
@@ -667,6 +671,192 @@ $json = json_decode(substr(Quriobot::quriobot_script(), strlen('window.qbOptions
 qb_ok('no visitor details for a logged-out visitor', !isset($json[0]['visitor']));
 
 // ---------------------------------------------------------------------------
+echo "\n== saving settings clears the cache ==\n";
+
+update_option('quriobot_path', 'abc123/def456');
+$cache_key = sprintf('quriobot.%s.bot.frontend.embed_code_2.%s', Quriobot::VERSION, 'abc123/def456');
+
+// Warm the cache, then re-save the SAME value. update_option() short-circuits on
+// an identical value, so anything hooked to update_option_* would never run —
+// yet re-saving is exactly how someone picks up a bot edited in the Control Room.
+qb_render(function () { return qb_bot_response(); });
+qb_eq('cache is warm before saving', '<!-- qb-embed -->', get_transient($cache_key));
+
+update_option('quriobot_path', 'abc123/def456');
+qb_eq(
+    'an unchanged re-save still clears the cached embed code',
+    false,
+    get_transient($cache_key)
+);
+
+// Changing the path must clear the OLD path's entry too, not just start using a
+// new key, or the previous bot's embed code lingers for the full period.
+qb_render(function () { return qb_bot_response(); });
+qb_eq('cache is warm again', '<!-- qb-embed -->', get_transient($cache_key));
+update_option('quriobot_path', 'other/bot');
+qb_eq('switching bots clears the previous path', false, get_transient($cache_key));
+
+// The retry guard must go too, or an outage during the old config keeps
+// suppressing fetches after the path changes.
+update_option('quriobot_path', 'abc123/def456');
+qb_render(function () { return new WP_Error('http_request_failed', 'boom'); });
+qb_ok('retry guard armed', false !== get_transient($cache_key . Quriobot::RETRY_SUFFIX));
+update_option('quriobot_path', 'abc123/def456');
+qb_eq(
+    'saving clears the retry guard as well',
+    false,
+    get_transient($cache_key . Quriobot::RETRY_SUFFIX)
+);
+
+// The AMP payload is cached under its own key; flushing only the non-AMP one
+// would leave AMP sites stale with nothing to show for it.
+$amp_key = Quriobot::cache_key('embed_code_amp', 'abc123/def456');
+qb_render(function () { return qb_bot_response(); }, true, true);
+qb_ok('AMP cache is warm', false !== get_transient($amp_key));
+update_option('quriobot_path', 'abc123/def456');
+qb_eq('saving clears the AMP cache too', false, get_transient($amp_key));
+
+// Every configured path must be cleared, not just the first one.
+update_option('quriobot_path', "first/bot\nsecond/bot");
+set_transient(Quriobot::cache_key('embed_code_2', 'first/bot'), '<!-- a -->', 600);
+set_transient(Quriobot::cache_key('embed_code_2', 'second/bot'), '<!-- b -->', 600);
+update_option('quriobot_path', "first/bot\nsecond/bot");
+qb_eq('the first path is cleared', false, get_transient(Quriobot::cache_key('embed_code_2', 'first/bot')));
+qb_eq('the second path is cleared', false, get_transient(Quriobot::cache_key('embed_code_2', 'second/bot')));
+
+// ---------------------------------------------------------------------------
+echo "\n== shipped copy ==\n";
+
+// Scans every shipped file, discovered rather than listed, so a new file is
+// covered automatically instead of quietly escaping these checks.
+$shipped_files = array();
+$dir = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(WP_PLUGIN_DIR . '/quriobot'));
+foreach ($dir as $entry) {
+    if ($entry->isFile() && preg_match('/\.(php|txt|css|js)$/', $entry->getFilename())) {
+        $shipped_files[] = $entry->getPathname();
+    }
+}
+qb_ok('found the shipped files to scan', count($shipped_files) >= 5, count($shipped_files) . ' found');
+
+$shipped = '';
+foreach ($shipped_files as $file) {
+    $shipped .= file_get_contents($file) . "\n";
+}
+
+qb_ok(
+    'no links to the retired freshdesk help desk',
+    false === stripos($shipped, 'freshdesk'),
+    'those articles return 404 for everyone'
+);
+qb_ok('no zero-width characters', 0 === preg_match('/[\x{200B}-\x{200D}\x{FEFF}]/u', $shipped));
+
+// Any plain-http URL, not just a hand-listed set of our hostnames. The GPL
+// licence URI is the one legitimate exception.
+preg_match_all('#http://[^\s"\'<>)]+#', $shipped, $http_links);
+qb_eq('no plain-http links', array(), array_values(array_unique($http_links[0])));
+
+$readme = file_get_contents(WP_PLUGIN_DIR . '/quriobot/readme.txt');
+qb_ok('readme has an Upgrade Notice section', false !== strpos($readme, '== Upgrade Notice =='));
+qb_ok(
+    'the current version has an Upgrade Notice entry',
+    false !== strpos(substr($readme, strpos($readme, '== Upgrade Notice ==')), '= ' . Quriobot::VERSION . ' =')
+);
+
+// ---------------------------------------------------------------------------
+echo "\n== uninstall cleanup ==\n";
+
+update_option('quriobot_path', 'abc123/def456');
+update_option('quriobot_version', Quriobot::VERSION);
+wp_set_current_user(1);
+update_option('quriobot_init', 'window.leftover();');
+wp_set_current_user(0);
+qb_render(function () { return qb_bot_response(); });
+qb_ok('there is state to clean up', false !== get_transient($cache_key));
+
+define('WP_UNINSTALL_PLUGIN', 'quriobot/quriobot.php');
+require WP_PLUGIN_DIR . '/quriobot/uninstall.php';
+
+global $wpdb;
+
+// Asserted against the options table rather than get_option(): register_setting()
+// declares a '' default, so get_option() keeps returning '' for a row that no
+// longer exists, which would make these pass even if nothing was deleted.
+foreach (array('quriobot_path', 'quriobot_init', 'quriobot_version') as $option) {
+    qb_eq(
+        "uninstall removes the $option row",
+        null,
+        $wpdb->get_var($wpdb->prepare(
+            "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",
+            $option
+        ))
+    );
+}
+
+qb_eq('uninstall removes the cached embed code', false, get_transient($cache_key));
+
+qb_eq(
+    'no quriobot rows survive in the options table',
+    '0',
+    (string) $wpdb->get_var(
+        "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE '%quriobot%'"
+    )
+);
+
+// Managed hosts almost always run Redis or Memcached. With an external object
+// cache, transients never touch the options table at all — so the options sweep
+// above finds nothing and deleting the reconstructed keys is the only thing that
+// actually removes them. Without this case the blind spot is invisible: the
+// suite's default install has no object cache, so the sweep always succeeds.
+wp_using_ext_object_cache(true);
+
+update_option('quriobot_path', 'cached/bot');
+$oc_key = Quriobot::cache_key('embed_code_2', 'cached/bot');
+set_transient($oc_key, '<!-- object cached -->', 600);
+
+qb_ok('the transient is readable under an object cache', false !== get_transient($oc_key));
+qb_eq(
+    'and it never reached the options table',
+    '0',
+    (string) $wpdb->get_var(
+        "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE '_transient_quriobot%'"
+    )
+);
+
+// The genuinely dangerous arrangement: rows in the options table left from
+// before the object cache was switched on (or by an older plugin version, whose
+// key embeds a different version number and so cannot be reconstructed) AND an
+// active object cache. delete_transient() short-circuits to the cache here and
+// would leave every one of these rows behind.
+$legacy = '_transient_quriobot.2.9.2.bot.frontend.embed_code_2.old/bot';
+add_option($legacy, '<!-- legacy -->');
+add_option('_transient_timeout_quriobot.2.9.2.bot.frontend.embed_code_2.old/bot', time() + 600);
+
+quriobot_uninstall_site();
+
+qb_eq(
+    'uninstall clears transients under an external object cache',
+    false,
+    get_transient($oc_key)
+);
+qb_eq(
+    'uninstall removes legacy transient rows even with an object cache active',
+    null,
+    $wpdb->get_var($wpdb->prepare(
+        "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",
+        $legacy
+    ))
+);
+qb_eq(
+    'and their companion timeout rows',
+    '0',
+    (string) $wpdb->get_var(
+        "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_quriobot%'"
+    )
+);
+
+wp_using_ext_object_cache(false);
+
+// ---------------------------------------------------------------------------
 echo "\n== admin surface ==\n";
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -696,6 +886,39 @@ qb_ok(
 
 $hooked = has_filter('plugin_action_links_quriobot/quriobot.php');
 qb_ok('plugin_action_links filter is hooked', false !== $hooked);
+
+// The save confirmation only renders after a redirect back from options.php, so
+// the flag has to be set for it to be exercised at all.
+$_GET['settings-updated'] = 'true';
+
+update_option('quriobot_path', 'solo/bot');
+ob_start();
+require WP_PLUGIN_DIR . '/quriobot/admin/views/settings.php';
+$view = ob_get_clean();
+qb_ok('one bot uses the singular form', false !== strpos($view, 'installed for 1 bot:'), $view ? '' : 'no output');
+qb_ok('the singular form is not the plural one', false === strpos($view, '1 bots'));
+qb_ok('the path is listed', false !== strpos($view, 'solo/bot'));
+
+update_option('quriobot_path', "first/bot\nsecond/bot");
+ob_start();
+require WP_PLUGIN_DIR . '/quriobot/admin/views/settings.php';
+$view = ob_get_clean();
+qb_ok('two bots use the plural form', false !== strpos($view, 'installed for 2 bots:'));
+qb_ok('both paths are listed comma-separated', false !== strpos($view, 'first/bot, second/bot'));
+
+// A whitespace-only value installs nothing, so it must read as disabled rather
+// than as "installed for 0 bots".
+remove_all_filters('sanitize_option_quriobot_path');
+update_option('quriobot_path', "  \n  ");
+$plugin->register_settings();
+ob_start();
+require WP_PLUGIN_DIR . '/quriobot/admin/views/settings.php';
+$view = ob_get_clean();
+qb_ok('a whitespace-only value reads as disabled', false !== strpos($view, 'Quriobot script is disabled'));
+qb_ok('and does not claim 0 bots', false === strpos($view, 'installed for 0 bots'));
+
+unset($_GET['settings-updated']);
+update_option('quriobot_path', '');
 
 // The settings view must round-trip quotes without mangling them.
 update_option('quriobot_init', "a = \"x\"; b = 'y';");

@@ -11,17 +11,30 @@
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 if ( isset( $_GET['settings-updated'] ) ) : ?>
 
-    <?php if ( get_option('quriobot_path') == '' ): ?>
+    <?php
+    // Uses the same splitter as the widget, so a whitespace-only stored value is
+    // reported as disabled here rather than as "installed for 0 bots".
+    $quriobot_saved_paths = Quriobot::split_lines( get_option('quriobot_path') );
+    ?>
+    <?php if ( ! $quriobot_saved_paths ): ?>
         <div id="message" class="notice notice-warning is-dismissible">
             <p><strong><?php esc_html_e('Quriobot script is disabled.', 'quriobot'); ?></strong></p>
         </div>
     <?php else: ?>
         <div id="message" class="notice notice-success is-dismissible">
                 <p><strong><?php
+                    // Several paths render as a run-on when interpolated raw, so
+                    // they are listed comma-separated.
                     echo esc_html( sprintf(
-                        /* translators: %s: the Quriobot bot path configured for this site. */
-                        __('Quriobot script installed for bot path %s', 'quriobot'),
-                        get_option('quriobot_path')
+                        /* translators: %1$d: number of bots. %2$s: comma-separated list of bot paths. */
+                        _n(
+                            'Quriobot script installed for %1$d bot: %2$s',
+                            'Quriobot script installed for %1$d bots: %2$s',
+                            count( $quriobot_saved_paths ),
+                            'quriobot'
+                        ),
+                        count( $quriobot_saved_paths ),
+                        implode( ', ', $quriobot_saved_paths )
                     ) );
                 ?></strong></p>
         </div>
@@ -35,7 +48,7 @@ if ( isset( $_GET['settings-updated'] ) ) : ?>
     <div class="wp-header">
         <img src="<?php echo esc_url( plugins_url( '../static/quriobot_logo_2x.png', __FILE__ ) ); ?>" alt="Quriobot" class="quriobot-logo">
         <p class="quriobot-tagline">
-            <?php esc_html_e('Increase conversion with an easy to use chatbot.', 'quriobot'); ?>
+            <?php esc_html_e('Increase conversion with an easy-to-use chatbot.', 'quriobot'); ?>
         </p>
     </div>
 
@@ -59,14 +72,14 @@ if ( isset( $_GET['settings-updated'] ) ) : ?>
                 echo wp_kses(
                     sprintf(
                         /* translators: %s: URL of the help centre article explaining how to find a bot path. */
-                        __( 'Learn more how to find your bot path <a target="_blank" href="%s">here</a>.', 'quriobot'),
-                        esc_url( 'https://quriobot.freshdesk.com/a/solutions/articles/35000007889' )
+                        __( 'Not sure where to find it? <a target="_blank" href="%s">Read the walkthrough</a>.', 'quriobot'),
+                        esc_url( 'https://academy.quriobot.com/publishing-your-bot-embedding-and-dedicated-pages/add-your-quriobot-to-your-wordpress-page/' )
                     ),
                     array( 'a' => array( 'href' => array(), 'target' => array() ) )
                 );
                 ?>
             </p>
-            <p><?php esc_html_e('Input your bot path into the field below to install your bot to your WordPress website.', 'quriobot'); ?></p>
+            <p><?php esc_html_e('Enter your bot path below to install your bot on your WordPress website.', 'quriobot'); ?></p>
 
             <table class="form-table">
                 <tbody>
@@ -80,7 +93,7 @@ if ( isset( $_GET['settings-updated'] ) ) : ?>
                         <p class="description" id="wp_quriobot_path_description">
                             <?php esc_html_e( '(Leave blank to disable)', 'quriobot' ); ?>
                             <br />
-                            <?php esc_html_e( 'If you want to put multiple bots on your website, add each bot path on the separate line', 'quriobot' ); ?>
+                            <?php esc_html_e( 'To put multiple bots on your website, add each bot path on a separate line.', 'quriobot' ); ?>
                         </p>
                         </td>
                     </tr>
@@ -100,7 +113,7 @@ if ( isset( $_GET['settings-updated'] ) ) : ?>
                         <p class="description" id="wp_quriobot_init_description">
                             <?php esc_html_e( '(Leave blank to disable)', 'quriobot' ); ?>
                             <br />
-                            <?php esc_html_e( 'If you need to fully customize the options provided for the widget initialization, provide the code which will be put into <script> tag before the widget <script> tag', 'quriobot' ); ?>
+                            <?php esc_html_e( 'To fully customize the options used to initialize the widget, provide the code that will be placed in a <script> tag before the widget <script> tag.', 'quriobot' ); ?>
                             <br />
                             <?php esc_html_e( 'This replaces the generated options, but it still needs at least one bot path above: the path is what loads the widget itself.', 'quriobot' ); ?>
                         </p>

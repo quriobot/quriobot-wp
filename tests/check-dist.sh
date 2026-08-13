@@ -37,6 +37,7 @@ admin/views/settings.php
 includes/class-quriobot.php
 quriobot.php
 readme.txt
+uninstall.php
 MANIFEST
 )
 actual=$(cd .dist/quriobot && find . ! -type d | sed 's|^\./||' | LC_ALL=C sort)
