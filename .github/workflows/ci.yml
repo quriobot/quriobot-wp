@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version:
+    name: version consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./tests/check-version.sh
+
+  # readme.txt is validated by the plugin-check job below: Plugin Check runs the
+  # same readme parser wordpress.org uses. The public web validator at
+  # /plugins/developers/readme-validator/ is deliberately NOT used here — driving
+  # it over curl returns the bare form regardless of input, so it can only ever
+  # pass, which is worse than no gate at all.
+
+  test:
+    name: WordPress ${{ matrix.wp }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest version practically testable on a modern PHP, the previous
+        # major, and latest. readme.txt declares a lower floor (4.7) because that
+        # is the oldest API the code uses; those releases predate PHP 8 and
+        # cannot run in these images.
+        wp: ['latest', '6.9', '6.2']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run integration suite
+        env:
+          WP_IMAGE: wordpress:${{ matrix.wp }}
+        run: ./tests/run.sh
+
+  plugin-check:
+    name: wordpress.org Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the suite with Plugin Check
+        env:
+          PLUGIN_CHECK: '1'
+        run: ./tests/run.sh
+
+  prerelease:
+    # The next WordPress release, while it is in beta/RC. This is the job that
+    # tells us the plugin is ready before the release lands, rather than after
+    # users report breakage.
+    name: WordPress prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve the current beta/RC build
+        id: beta
+        run: |
+          version=$(./tests/wp-current-version.sh beta)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Testing against WordPress $version"
+      - name: Run integration suite
+        env:
+          WP_VERSION: ${{ steps.beta.outputs.version }}
+        run: ./tests/run.sh

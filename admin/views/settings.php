@@ -5,15 +5,25 @@
 
 ?>
 
-<?php if ( isset( $_GET['settings-updated'] ) ) : ?>
+<?php
+// Reading the flag WordPress itself appends after redirecting back from
+// options.php. Nothing is processed from the request, so there is no nonce.
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+if ( isset( $_GET['settings-updated'] ) ) : ?>
 
     <?php if ( get_option('quriobot_path') == '' ): ?>
         <div id="message" class="notice notice-warning is-dismissible">
-            <p><strong><?php _e('Quriobot script is disabled.', 'quriobot'); ?></strong></p>
+            <p><strong><?php esc_html_e('Quriobot script is disabled.', 'quriobot'); ?></strong></p>
         </div>
     <?php else: ?>
         <div id="message" class="notice notice-success is-dismissible">
-                <p><strong><?php echo sprintf( __('Quriobot script installed for bot path %s', 'quriobot'), get_option('quriobot_path')); ?></strong></p>
+                <p><strong><?php
+                    echo esc_html( sprintf(
+                        /* translators: %s: the Quriobot bot path configured for this site. */
+                        __('Quriobot script installed for bot path %s', 'quriobot'),
+                        get_option('quriobot_path')
+                    ) );
+                ?></strong></p>
         </div>
     <?php endif; ?>
 
@@ -23,9 +33,9 @@
 <div id="business-info-wrap" class="wrap">
 
     <div class="wp-header">
-        <img src="<?php echo plugins_url( '../static/quriobot_logo_2x.png', __FILE__ ); ?>" alt="Quriobot" class="quriobot-logo">
+        <img src="<?php echo esc_url( plugins_url( '../static/quriobot_logo_2x.png', __FILE__ ) ); ?>" alt="Quriobot" class="quriobot-logo">
         <p class="quriobot-tagline">
-            <?php echo __('Increase conversion with an easy to use chatbot.', 'quriobot'); ?>
+            <?php esc_html_e('Increase conversion with an easy to use chatbot.', 'quriobot'); ?>
         </p>
     </div>
 
@@ -35,13 +45,28 @@
 
         <div id="quriobot-form-area">
             <p><?php
-            $url = 'https://control.quriobot.com';
-            $link = sprintf( wp_kses( __( 'Visit <a href="%s" target="_blank">Quriobot Control Room</a> to find your unique bot path.', 'quriobot'), array(  'a' => array( 'href' => array(), 'target' =>  '_blank' ) ) ), esc_url( $url ) );
-            echo $link;
+            $quriobot_control_room_url = 'https://control.quriobot.com';
+            echo wp_kses(
+                sprintf(
+                    /* translators: %s: URL of the Quriobot Control Room. */
+                    __( 'Visit <a href="%s" target="_blank">Quriobot Control Room</a> to find your unique bot path.', 'quriobot'),
+                    esc_url( $quriobot_control_room_url )
+                ),
+                array( 'a' => array( 'href' => array(), 'target' => array() ) )
+            );
             ?>
-                Learn more how to find your bot path <a target="_blank" href="https://quriobot.freshdesk.com/a/solutions/articles/35000007889">here</a>.
+                <?php
+                echo wp_kses(
+                    sprintf(
+                        /* translators: %s: URL of the help centre article explaining how to find a bot path. */
+                        __( 'Learn more how to find your bot path <a target="_blank" href="%s">here</a>.', 'quriobot'),
+                        esc_url( 'https://quriobot.freshdesk.com/a/solutions/articles/35000007889' )
+                    ),
+                    array( 'a' => array( 'href' => array(), 'target' => array() ) )
+                );
+                ?>
             </p>
-            <p><?php _e('Input your bot path into the field below to install your bot to your WordPress website.', 'quriobot'); ?></p>
+            <p><?php esc_html_e('Input your bot path into the field below to install your bot to your WordPress website.', 'quriobot'); ?></p>
 
             <table class="form-table">
                 <tbody>
@@ -51,7 +76,7 @@
                         </th>
 
                         <td>
-                        <textarea name="quriobot_path" id="quriobot_path" rows="10" cols="100"><?php echo esc_attr( get_option('quriobot_path') ); ?></textarea>
+                        <textarea name="quriobot_path" id="quriobot_path" rows="10" cols="100"><?php echo esc_textarea( get_option('quriobot_path') ); ?></textarea>
                         <p class="description" id="wp_quriobot_path_description">
                             <?php esc_html_e( '(Leave blank to disable)', 'quriobot' ); ?>
                             <br />
@@ -71,11 +96,13 @@
     use: 'asdfasdfasfasd/adfadfasdfasd',
     lang: document.getElementsByTagName('html')[0].getAttribute('lang').toLowerCase()
 })"
-                            ><?php echo esc_attr( get_option('quriobot_init') ); ?></textarea>
+                            ><?php echo esc_textarea( get_option('quriobot_init') ); ?></textarea>
                         <p class="description" id="wp_quriobot_init_description">
                             <?php esc_html_e( '(Leave blank to disable)', 'quriobot' ); ?>
                             <br />
-                            <?php esc_html_e( 'If you need to fully customize the options provided for the widget initalization, provide the code which will be put into <script> tag before the widget <script> tag', 'quriobot' ); ?>
+                            <?php esc_html_e( 'If you need to fully customize the options provided for the widget initialization, provide the code which will be put into <script> tag before the widget <script> tag', 'quriobot' ); ?>
+                            <br />
+                            <?php esc_html_e( 'This replaces the generated options, but it still needs at least one bot path above: the path is what loads the widget itself.', 'quriobot' ); ?>
                         </p>
                         </td>
                     </tr>
