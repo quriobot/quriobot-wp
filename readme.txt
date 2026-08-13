@@ -4,18 +4,19 @@ Tags: quriobot,chatbots,surveys,support
 Requires at least: 4.7
 Requires PHP: 5.6
 Tested up to: 7.1
-Stable tag: 2.9.2
+Stable tag: 2.9.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
-Increase conversion with an easy to use chatbot.
+Increase conversion with an easy-to-use chatbot.
 
 == Description ==
 
-Quriobot is working for you 24/7. It helps you increase conversion with 28% and increases lead retrieval rates with up to 21%. All of this is taken care of, while the online experience is optimized.​
+Quriobot works for you 24/7. It helps you increase conversion by 28% and lead retrieval rates by up to 21%, without getting in the way of the visitor's experience.
+
 Make Quriobot answer questions of your website visitors, retrieve contact information, help people find what they are looking for, assist them with making reservations, booking or registrations and much more!
 
-You can do all of this for a fraction of the costs of doing it yourself. As a matter of fact, you can do it for free!
+You can do all of this for a fraction of the cost of doing it yourself — and you can start for free.
 
 == Installation ==
 
@@ -34,7 +35,7 @@ Alternatively, you can install manually:
 = Configuration =
 
 After installation, configure the plugin by visiting Settings -> Quriobot and entering your unique bot path. You can find your path from [Control Room](https://control.quriobot.com) in your bot edit page -> Channels -> Web.
-See how to find your bot path [here](https://quriobot.freshdesk.com/a/solutions/articles/35000007889).
+See [Add your Quriobot to your WordPress page](https://academy.quriobot.com/publishing-your-bot-embedding-and-dedicated-pages/add-your-quriobot-to-your-wordpress-page/) for a walkthrough.
 
 == Frequently Asked Questions ==
 
@@ -42,11 +43,11 @@ See how to find your bot path [here](https://quriobot.freshdesk.com/a/solutions/
 
 Yes. You can [sign up for a free Quriobot account](https://control.quriobot.com/signup) which provides access to all our features.
 
-= I've set up Quriobot, what now? =
+= I've set up Quriobot — what now? =
 
-You can enable, disable and enable all the Quriobot features from within the [Control Room](https://control.quriobot.com). Any changes will be reflected immediately on the site(s) where you have the Quriobot script installed.
+You can enable, disable and configure all the Quriobot features from within the [Control Room](https://control.quriobot.com). Any changes will be reflected immediately on the site(s) where you have the Quriobot script installed.
 
-For more information on getting started with Quriobot [visit our help center](http://academy.quriobot.com).
+For more information on getting started with Quriobot [visit our help center](https://academy.quriobot.com).
 
 = Where can I find out more about Quriobot? =
 
@@ -62,7 +63,11 @@ We’ve built Quriobot with a [privacy by design](https://quriobot.com/gdpr) for
 
 = How do I remove Quriobot from my site? =
 
-You can uninstall this plugin at any time to remove Quriobot from your site.
+You can uninstall this plugin at any time to remove Quriobot from your site. Uninstalling also deletes the settings and cached data this plugin stored, leaving nothing behind in your database.
+
+= I changed my bot, but my site still shows the old version =
+
+The plugin caches your bot's embed code so it does not have to contact Quriobot on every page load. Saving the settings page clears that cache, so re-saving Settings -> Quriobot will pick up your change immediately.
 
 == Screenshots ==
 
@@ -70,6 +75,13 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 2. After saving you will see this success message. Visit [Control Room](https://control.quriobot.com) to configure your bot.
 
 == Changelog ==
+
+= 2.9.3 =
+* Fixed the "how to find your bot path" link, which pointed at a retired help-desk article and returned a 404 for everyone.
+* Saving the settings page now clears the cached embed code, so a change to your bot appears straight away instead of after the cache expires.
+* Uninstalling the plugin now removes its settings and cached data, as the FAQ has always said it would.
+* The save confirmation now lists every configured bot, and a blank-but-not-empty bot path is correctly reported as disabled.
+* Corrected several wording and typing errors in the plugin description, the FAQ and the settings screen.
 
 = 2.9.2 =
 * Tested against WordPress 7.1.
@@ -240,3 +252,10 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 = 1.0.5 =
 * Initial release.
 
+== Upgrade Notice ==
+
+= 2.9.3 =
+Fixes a broken documentation link shown on the settings page, and clears the cached embed code when you save your settings so bot changes appear immediately. Deleting the plugin now also removes its settings and cached data.
+
+= 2.9.2 =
+Restores TLS certificate verification for the AMP embed request and replaces a WordPress API deprecated since 6.2. Recommended for all sites.
