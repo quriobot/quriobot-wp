@@ -1,0 +1,75 @@
+name: Release
+
+# Publishes to the wordpress.org plugin directory, replacing the manual
+# git-svn dcommit flow. Tag the commit and push:
+#
+#   git tag v2.9.2 && git push origin v2.9.2
+#
+# Requires two repository secrets holding the wordpress.org account that owns
+# the plugin: SVN_USERNAME and SVN_PASSWORD.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Build and validate without publishing to wordpress.org'
+        type: boolean
+        default: true
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish to wordpress.org
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag must match the plugin version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF#refs/tags/v}"
+          version=$(./tests/plugin-version.sh)
+          echo "tag=$tag plugin=$version"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::tag v$tag does not match the plugin version $version"
+            exit 1
+          fi
+
+      - name: Confirm this version is not already published
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF#refs/tags/v}"
+          info=$(curl -fsSL "https://api.wordpress.org/plugins/info/1.2/?action=plugin_information&request%5Bslug%5D=quriobot")
+          matches=$(printf '%s' "$info" | grep -o '"version":"[^"]*"' || true)
+          published=$(printf '%s\n' "$matches" | sed -n '1s/.*:"\(.*\)"/\1/p')
+          echo "wordpress.org currently serves $published"
+          if [ "$tag" = "$published" ]; then
+            echo "::error::$tag is already published on wordpress.org"
+            exit 1
+          fi
+
+      # Package first: a packaging failure must block the publish, not follow it.
+      # This runs the same check the test suite runs, against the same dist tree
+      # the 10up action publishes from .distignore.
+      - name: Build and verify the distributable
+        run: |
+          ./tests/check-dist.sh
+          make build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quriobot-plugin
+          path: quriobot.zip
+
+      - name: Deploy
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.event.inputs.dry_run != 'true' }}
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: quriobot

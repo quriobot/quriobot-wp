@@ -1,0 +1,14 @@
+# Files that live in git but must never ship to the wordpress.org SVN repo.
+.git
+.github
+.gitignore
+.distignore
+.DS_Store
+tests
+wp-content
+mysql_data
+.dist
+docker-compose.yml
+docker-compose.test.yml
+Makefile
+quriobot.zip

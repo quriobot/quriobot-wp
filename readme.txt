@@ -1,10 +1,10 @@
 === Quriobot ===
 Contributors: quriobot
 Tags: quriobot,chatbots,surveys,support
-Requires at least: 4.6
-Requires PHP: 5.3
-Tested up to: 6.7
-Stable tag: 2.9.1
+Requires at least: 4.7
+Requires PHP: 5.6
+Tested up to: 7.1
+Stable tag: 2.9.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
@@ -70,6 +70,22 @@ You can uninstall this plugin at any time to remove Quriobot from your site.
 2. After saving you will see this success message. Visit [Control Room](https://control.quriobot.com) to configure your bot.
 
 == Changelog ==
+
+= 2.9.2 =
+* Tested against WordPress 7.1.
+* Replaced the deprecated `Requests` class with the WordPress HTTP API (`wp_remote_get`). The old class has been deprecated since WordPress 6.2 and is scheduled for removal.
+* Restored TLS certificate verification for the AMP embed code request.
+* Fixed the "Settings" link on the Plugins screen, which pointed at a page that did not exist and was never registered.
+* Fixed the settings textareas mangling quotes in saved values on every re-save.
+* Declared sanitization callbacks and correct types for both settings.
+* Bot paths are now split on any line ending, so paths no longer keep a stray carriage return.
+* Fixed a bot with no embed code being cached in a way that printed a stray script tag on every later page load.
+* Added a one-minute backoff after a failed API call, so an outage no longer makes every page load issue its own blocking request.
+* The widget is now set up on the `wp` action instead of `plugins_loaded`. This stops the AMP plugin reporting Quriobot for checking whether a request is an AMP request too early, makes that check reliable, and keeps the API call off admin, cron and REST requests.
+* Changing the bot initialization code now requires the `unfiltered_html` capability, since it is injected as raw JavaScript.
+* Pages that embed a logged-in visitor's details are now excluded from full-page caching.
+* Corrected the declared minimums to WordPress 4.7 and PHP 5.6, which is what the code actually uses. Automated tests run against WordPress 6.2, 6.9, 7.0 and 7.1.
+* Resolved every issue reported by the official Plugin Check tool.
 
 = 2.9.1 =
 * Updated to the latest WordPress version.
