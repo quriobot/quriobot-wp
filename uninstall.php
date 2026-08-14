@@ -57,29 +57,40 @@ function quriobot_uninstall_site() {
 	}
 }
 
-if ( is_multisite() ) {
-	// Batched: a large network would otherwise load every site and switch into
-	// each one in a single request, time out part-way, and leave the rest of the
-	// network with orphaned rows.
-	$quriobot_batch  = 100;
-	$quriobot_offset = 0;
+/**
+ * Runs the cleanup on every site of a network.
+ *
+ * Batched: loading every site and switching into each one in a single request
+ * would time out part-way on a large network, leaving the remaining sites with
+ * orphaned rows. The batch size is a parameter so the paging can be exercised
+ * without standing up a hundred-site network.
+ *
+ * @param int $batch How many sites to load at a time.
+ */
+function quriobot_uninstall_network( $batch = 100 ) {
+	$offset = 0;
+
 	do {
-		$quriobot_site_ids = get_sites(
+		$site_ids = get_sites(
 			array(
 				'fields' => 'ids',
-				'number' => $quriobot_batch,
-				'offset' => $quriobot_offset,
+				'number' => $batch,
+				'offset' => $offset,
 			)
 		);
 
-		foreach ( $quriobot_site_ids as $quriobot_site_id ) {
-			switch_to_blog( $quriobot_site_id );
+		foreach ( $site_ids as $site_id ) {
+			switch_to_blog( $site_id );
 			quriobot_uninstall_site();
 			restore_current_blog();
 		}
 
-		$quriobot_offset += $quriobot_batch;
-	} while ( count( $quriobot_site_ids ) === $quriobot_batch );
+		$offset += $batch;
+	} while ( count( $site_ids ) === $batch );
+}
+
+if ( is_multisite() ) {
+	quriobot_uninstall_network();
 } else {
 	quriobot_uninstall_site();
 }

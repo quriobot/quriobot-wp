@@ -771,10 +771,70 @@ wp_set_current_user(1);
 update_option('quriobot_init', 'window.leftover();');
 wp_set_current_user(0);
 qb_render(function () { return qb_bot_response(); });
-qb_ok('there is state to clean up', false !== get_transient($cache_key));
+
+// On a network, seed every other site BEFORE the require so that requiring the file
+// exercises the is_multisite() dispatch itself. Seeding afterwards would leave
+// the dispatch untested — the file would only ever find the current site dirty,
+// and deleting the whole `if ( is_multisite() )` branch would still pass.
+// The current blog is deliberately skipped: writing quriobot_path here goes
+// through update_option, which fires the plugin's own flush_cache_on_save() and
+// would delete the cached embed code the assertions below are about to check.
+// Test setup that writes through the production path runs the production hooks.
+$network_site_ids = array();
+if (is_multisite()) {
+    foreach (get_sites(array('fields' => 'ids', 'number' => 0)) as $id) {
+        if (get_current_blog_id() !== (int) $id) {
+            $network_site_ids[] = (int) $id;
+        }
+    }
+}
+
+foreach ($network_site_ids as $network_site_id) {
+    switch_to_blog($network_site_id);
+    update_option('quriobot_path', 'net/seed' . $network_site_id);
+    set_transient(Quriobot::cache_key('embed_code_2', 'net/seed' . $network_site_id), '<!-- seed -->', 600);
+    restore_current_blog();
+}
+
+// Prove the seeding landed: if it silently no-opped, the $dirty check after the
+// require would pass with nothing to find.
+if ($network_site_ids) {
+    $seeded = 0;
+    foreach ($network_site_ids as $network_site_id) {
+        switch_to_blog($network_site_id);
+        if (get_option('quriobot_path')) {
+            $seeded++;
+        }
+        restore_current_blog();
+    }
+    qb_eq('every other site is seeded before the uninstall', count($network_site_ids), $seeded);
+}
+
+// Asserted here rather than before the seeding above: the seed loop writes
+// through update_option and so runs the plugin's own hooks. If it ever clears
+// this transient, every "uninstall removed it" assertion below would pass
+// against state that was already gone.
+qb_ok(
+    'there is still state to clean up when the uninstall runs',
+    false !== get_transient($cache_key),
+    'the seeding above destroyed the precondition'
+);
 
 define('WP_UNINSTALL_PLUGIN', 'quriobot/quriobot.php');
 require WP_PLUGIN_DIR . '/quriobot/uninstall.php';
+
+if ($network_site_ids) {
+    $dirty = array();
+    foreach ($network_site_ids as $network_site_id) {
+        switch_to_blog($network_site_id);
+        if (get_option('quriobot_path')
+            || false !== get_transient(Quriobot::cache_key('embed_code_2', 'net/seed' . $network_site_id))) {
+            $dirty[] = $network_site_id;
+        }
+        restore_current_blog();
+    }
+    qb_eq('requiring uninstall.php on a network cleans every site', array(), $dirty);
+}
 
 global $wpdb;
 
@@ -855,6 +915,100 @@ qb_eq(
 );
 
 wp_using_ext_object_cache(false);
+
+// ---------------------------------------------------------------------------
+echo "\n== multisite ==\n";
+
+if (!is_multisite()) {
+    echo "  (single-site install — run with MULTISITE=1 for this section)\n";
+} else {
+    // Exactly four, because the paging assertion below depends on the network
+    // size being an exact multiple of the batch size. At three sites batch 2
+    // yields 2 then 1, never issues the empty final query, and the boundary
+    // being tested silently stops existing.
+    $site_ids = get_sites(array('fields' => 'ids', 'number' => 0));
+    qb_eq('the network has four sites', 4, count($site_ids));
+
+    // Seed every site, including ones the uninstall has to switch into.
+    foreach ($site_ids as $site_id) {
+        switch_to_blog($site_id);
+        update_option('quriobot_path', 'net/bot' . $site_id);
+        update_option('quriobot_version', Quriobot::VERSION);
+        set_transient(Quriobot::cache_key('embed_code_2', 'net/bot' . $site_id), '<!-- per site -->', 600);
+        restore_current_blog();
+    }
+
+    $seeded = 0;
+    foreach ($site_ids as $site_id) {
+        switch_to_blog($site_id);
+        if (get_option('quriobot_path')) {
+            $seeded++;
+        }
+        restore_current_blog();
+    }
+    qb_eq('every site has state to clean up', count($site_ids), $seeded);
+
+    // Batch size 2 against a 4-site network exercises paging AND the
+    // exact-multiple boundary: the loop must issue a third query, get an empty
+    // batch and stop. Counting the queries pins both properties and fails fast —
+    // asserting "it terminated" can only ever fail by hanging the runner.
+    $site_queries = 0;
+    $count_queries = function () use (&$site_queries) {
+        $site_queries++;
+    };
+    add_action('pre_get_sites', $count_queries);
+    quriobot_uninstall_network(2);
+    remove_action('pre_get_sites', $count_queries);
+
+    qb_eq('paging issues 2 full batches then an empty one', 3, $site_queries);
+
+    $left = array();
+    foreach ($site_ids as $site_id) {
+        switch_to_blog($site_id);
+        if (get_option('quriobot_path') || get_option('quriobot_version')
+            || false !== get_transient(Quriobot::cache_key('embed_code_2', 'net/bot' . $site_id))) {
+            $left[] = $site_id;
+        }
+        restore_current_blog();
+    }
+    qb_eq('the network uninstall visits every site', array(), $left);
+
+    // The capability that behaves differently here: on multisite `manage_options`
+    // is held by every site administrator, while `unfiltered_html` is reserved
+    // for super admins. That gap is the whole reason sanitize_init_code() gates
+    // on unfiltered_html rather than on reaching the settings page.
+    $site_admin_id = wp_create_user('qb_site_admin', 'pw-' . wp_generate_password(12, false), 'qb_site_admin@example.com');
+    if (!is_wp_error($site_admin_id)) {
+        add_user_to_blog(get_current_blog_id(), $site_admin_id, 'administrator');
+        wp_set_current_user($site_admin_id);
+
+        qb_ok('a site administrator can reach the settings page', current_user_can('manage_options'));
+        qb_ok('but does not hold unfiltered_html on multisite', !current_user_can('unfiltered_html'));
+
+        remove_all_filters('sanitize_option_quriobot_init');
+        $plugin->register_settings();
+        qb_eq('the snippet starts empty', '', (string) get_option('quriobot_init'));
+        update_option('quriobot_init', 'window.injected();');
+        qb_eq(
+            'so a site administrator cannot inject raw JavaScript',
+            '',
+            (string) get_option('quriobot_init')
+        );
+
+        wp_set_current_user(1);
+        qb_ok('a super admin does hold unfiltered_html', current_user_can('unfiltered_html'));
+        update_option('quriobot_init', 'window.allowed();');
+        qb_eq(
+            'and can set it',
+            'window.allowed();',
+            (string) get_option('quriobot_init')
+        );
+        update_option('quriobot_init', '');
+        wp_set_current_user(0);
+    } else {
+        qb_ok('could not create a site administrator', false, $site_admin_id->get_error_message());
+    }
+}
 
 // ---------------------------------------------------------------------------
 echo "\n== admin surface ==\n";

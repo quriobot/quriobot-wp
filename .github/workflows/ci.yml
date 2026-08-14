@@ -14,6 +14,7 @@ jobs:
   version:
     name: version consistency
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - run: ./tests/check-version.sh
@@ -27,6 +28,7 @@ jobs:
   test:
     name: WordPress ${{ matrix.wp }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -42,9 +44,24 @@ jobs:
           WP_IMAGE: wordpress:${{ matrix.wp }}
         run: ./tests/run.sh
 
+  multisite:
+    # The network branch of uninstall.php, and the capability split that only
+    # exists here: site administrators hold manage_options but not
+    # unfiltered_html, which is what sanitize_init_code() gates on.
+    name: WordPress multisite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run integration suite on a network
+        env:
+          MULTISITE: '1'
+        run: ./tests/run.sh
+
   plugin-check:
     name: wordpress.org Plugin Check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Run the suite with Plugin Check
@@ -58,6 +75,7 @@ jobs:
     # users report breakage.
     name: WordPress prerelease
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Resolve the current beta/RC build

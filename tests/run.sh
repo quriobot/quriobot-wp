@@ -6,6 +6,8 @@
 #   WP_IMAGE=wordpress:6.2 tests/run.sh       # a specific released version
 #   WP_VERSION=7.1-RC3 tests/run.sh           # upgrade core to a beta/RC first
 #   PLUGIN_CHECK=1 tests/run.sh               # also run the wordpress.org Plugin Check
+#   MULTISITE=1 tests/run.sh                  # convert to a network and add the
+#                                             # multisite-only assertions
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -76,8 +78,21 @@ if [ -n "${WP_VERSION:-}" ]; then
   wp core update-db >/dev/null
 fi
 
-echo "  running WordPress $(wp core version)"
-wp plugin activate quriobot
+network_flag=''
+if [ "${MULTISITE:-}" = "1" ]; then
+  network_flag='--network'
+  echo "  converting to a network"
+  wp core multisite-convert >/dev/null
+  # Three extra sites, so the uninstall sweep has more than the main site to
+  # visit and the paging has something to page over.
+  for slug in alpha beta gamma; do
+    wp site create --slug="$slug" --quiet >/dev/null
+  done
+  echo "  network has $(wp site list --field=url | wc -l | tr -d ' ') sites"
+fi
+
+echo "  running WordPress $(wp core version)${network_flag:+ (multisite)}"
+wp plugin activate quriobot ${network_flag}
 
 echo
 echo "== integration suite =="
